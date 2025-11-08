@@ -1,10 +1,10 @@
 # Build files
-bin/*
-web/*
-
-# CMake cache
 build/*
 build-*/*
+
+# Install files
+dist/*
+dist-*/*
 
 # Prerequisites
 *.d

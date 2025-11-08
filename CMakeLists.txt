@@ -9,16 +9,16 @@ project(${PROJECT_NAME} VERSION ${PROJECT_VERSION} DESCRIPTION ${PROJECT_NAME} L
 
 #                         SETTINGS
 #═══════════════════════════════════════════════════════════════
+# Raylib settings - defaults to local lib if exists
+option(USE_RAYLIB_FETCH "Fetch and build from source" ON)
+# TODO: option(USE_RAYLIB_CUSTOM "Fetch and custom build" OFF)
+option(USE_RAYLIB_LOCAL "Use a local static build" OFF)
+
 set(DIR_SOURCE "src" CACHE STRING "Project source files folder name")
 set(DIR_INCLUDE "include" CACHE STRING "Project header files folder name")
 set(DIR_ASSETS "assets" CACHE STRING "Project assets folder name")
 set(DIR_INSTALL "dist" CACHE STRING "Project install folder name")
 set(FILE_CONFIG "config" CACHE STRING "Optional config file name in include folder")
-
-# Raylib settings - defaults to local lib if exists
-option(USE_RAYLIB_FETCH "Fetch and build from source" ON)
-# TODO: option(USE_RAYLIB_CUSTOM "Fetch and custom build" OFF)
-option(USE_RAYLIB_LOCAL "Use a local static build" ON)
 
 #                      LOCAL LIB PATHS
 #---------------------------------------------------------------
@@ -117,29 +117,30 @@ endfunction()
 
 add_executable(${PROJECT_NAME})
 # source files
-file(GLOB_RECURSE PROJECT_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/${DIR_SOURCE}/*.cpp")
+file(GLOB_RECURSE PROJECT_SOURCES CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/${DIR_SOURCE}/*.cpp")
 target_sources(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCES})
 # include files
-set(PROJECT_INCLUDES "${CMAKE_CURRENT_LIST_DIR}/${DIR_INCLUDE}")
+set(PROJECT_INCLUDES "${PROJECT_SOURCE_DIR}/${DIR_INCLUDE}")
 target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_INCLUDES})
 # compile flags
+if(IS_RELEASE)
+    target_compile_options(${PROJECT_NAME} PRIVATE 
+        -O2
+    )
+elseif(IS_DEBUG)
+    target_compile_options(${PROJECT_NAME} PRIVATE 
+        -O0
+    )
+endif()
+
 target_compile_options(${PROJECT_NAME} PRIVATE 
-    -Os
     -Wall
     -Wpedantic
     -Wno-missing-braces
     -Wunused-result
 )
-
 #                         LIB SETUP
 #═══════════════════════════════════════════════════════════════
-
-# Fetch Raylib
-if(USE_RAYLIB_FETCH)
-    Fetch(raylib "https://github.com/raysan5/raylib.git" head)
-
-    list(APPEND LIBRARIES raylib)
-endif()
 
 # Local Static Raylib Desktop Setup
 if(USE_RAYLIB_LOCAL AND IS_DESKTOP)
@@ -171,13 +172,34 @@ if(USE_RAYLIB_LOCAL AND IS_WEB)
     list(APPEND LIBRARIES raylib)
 endif()
 
+# Fetch Raylib
+if(USE_RAYLIB_FETCH)
+    Fetch(raylib "https://github.com/raysan5/raylib.git" head)
+
+    list(APPEND LIBRARIES raylib)
+endif()
+
 if(IS_WEB)
     set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".html")
     target_include_directories(${PROJECT_NAME} PRIVATE "${LOCAL_EM_INCLUDE}")
 
     if(USE_RAYLIB_FETCH)
+        
+        if(IS_RELEASE)
+            target_compile_options(raylib PRIVATE 
+                -O2
+            )
+        elseif(ISDEBUG)
+            target_compile_options(raylib PRIVATE 
+                -O0
+            )
+
+            target_compile_options(${PROJECT_NAME} PRIVATE 
+                -fwasm-exceptions
+            )
+        endif()
+
         target_compile_options(raylib PRIVATE 
-            -Os 
             -Wall 
             -DPLATFORM_WEB 
             -DGRAPHICS_API_OPENGL_ES3
@@ -200,19 +222,19 @@ if(IS_WEB)
     target_link_options(${PROJECT_NAME} PRIVATE 
         -sFULL_ES3 
         -sUSE_GLFW=3 
-        -sASYNCIFY
         -sWASM=1
         -sEXPORT_ES6=1
         -sGL_ENABLE_GET_PROC_ADDRESS=1
-        -sTOTAL_MEMORY=67108864 
-        -sFORCE_FILESYSTEM=1
         -sEXPORTED_RUNTIME_METHODS=ccall,cwrap,HEAPF32 
         --preload-file "../${DIR_ASSETS}"
         --shell-file "${PATH_WEB_SHELL}"
     )
 
     if(IS_DEBUG)
-        target_link_options(${PROJECT_NAME} PRIVATE --emrun)
+        target_link_options(${PROJECT_NAME} PRIVATE 
+            -fwasm-exceptions
+            --emrun
+        )
     endif()
 
 endif()
@@ -229,19 +251,30 @@ execute_process(COMMAND date "+%Y-%m-%d %H:%M:%S" OUTPUT_VARIABLE OUTPUT_DATE)
 string(STRIP "${OUTPUT_DATE}" DATE_BUILD)
 
 # Preprocess config file macros if file exists
-set(PATH_CONFIG "${CMAKE_CURRENT_LIST_DIR}/${DIR_INCLUDE}/${FILE_CONFIG}")
+set(PATH_CONFIG "${PROJECT_SOURCE_DIR}/${DIR_INCLUDE}/${FILE_CONFIG}")
 if(EXISTS "${PATH_CONFIG}.h.in")
     configure_file("${PATH_CONFIG}.h.in" "${PATH_CONFIG}.h")
 endif()
 
 #                         INSTALL
 #═══════════════════════════════════════════════════════════════
+set(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR})
+
 # Set install folder
 if(IS_WEB)
-    set(PATH_BUILD "${CMAKE_CURRENT_LIST_DIR}/${DIR_INSTALL}-web")
+    set(PATH_BUILD "${PROJECT_SOURCE_DIR}/${DIR_INSTALL}-web")
 else()
-    set(PATH_BUILD "${CMAKE_CURRENT_LIST_DIR}/${DIR_INSTALL}")
+    set(PATH_BUILD "${PROJECT_SOURCE_DIR}/${DIR_INSTALL}")
 endif()
 
 # Install files
-install(TARGETS ${PROJECT_NAME} DESTINATION "${PATH_BUILD}")
+if (IS_WEB)
+    install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "${PATH_BUILD}" COMPONENT Runtime)
+    install(FILES 
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${PROJECT_NAME}.js"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${PROJECT_NAME}.wasm"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${PROJECT_NAME}.data"
+        DESTINATION "${PATH_BUILD}" COMPONENT Runtime)
+else()
+    install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "${PATH_BUILD}" COMPONENT Runtime)
+endif()
