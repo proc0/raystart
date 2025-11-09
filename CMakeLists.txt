@@ -119,10 +119,10 @@ add_executable(${PROJECT_NAME})
 # source files
 file(GLOB_RECURSE PROJECT_SOURCES CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/${DIR_SOURCE}/*.cpp")
 target_sources(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCES})
-# include files
+# header files
 set(PROJECT_INCLUDES "${PROJECT_SOURCE_DIR}/${DIR_INCLUDE}")
 target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_INCLUDES})
-# compile flags
+# compile options
 if(IS_RELEASE)
     target_compile_options(${PROJECT_NAME} PRIVATE 
         -O2
@@ -139,9 +139,9 @@ target_compile_options(${PROJECT_NAME} PRIVATE
     -Wno-missing-braces
     -Wunused-result
 )
+
 #                         LIB SETUP
 #═══════════════════════════════════════════════════════════════
-
 # Local Static Raylib Desktop Setup
 if(USE_RAYLIB_LOCAL AND IS_DESKTOP)
     find_library(PATH_RAYLIB raylib PATHS "${LOCAL_RAYLIB}" REQUIRED NO_CMAKE_FIND_ROOT_PATH)
@@ -184,7 +184,6 @@ if(IS_WEB)
     target_include_directories(${PROJECT_NAME} PRIVATE "${LOCAL_EM_INCLUDE}")
 
     if(USE_RAYLIB_FETCH)
-        
         if(IS_RELEASE)
             target_compile_options(raylib PRIVATE 
                 -O2
@@ -224,7 +223,6 @@ if(IS_WEB)
         -sUSE_GLFW=3 
         -sWASM=1
         -sEXPORT_ES6=1
-        -sGL_ENABLE_GET_PROC_ADDRESS=1
         -sEXPORTED_RUNTIME_METHODS=ccall,cwrap,HEAPF32 
         --preload-file "../${DIR_ASSETS}"
         --shell-file "${PATH_WEB_SHELL}"
@@ -233,15 +231,20 @@ if(IS_WEB)
     if(IS_DEBUG)
         target_link_options(${PROJECT_NAME} PRIVATE 
             -fwasm-exceptions
+            -sABORT_ON_WASM_EXCEPTIONS
             --emrun
         )
     endif()
 
+    if(IS_RELEASE)
+        target_link_options(${PROJECT_NAME} PRIVATE 
+            -sMINIFY_HTML
+        )
+    endif()
 endif()
 
 #                         LIB LINK
 #═══════════════════════════════════════════════════════════════
-
 target_link_libraries(${LIBRARIES})
 
 #                     BUILD INFO CONFIG
