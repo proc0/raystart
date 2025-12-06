@@ -1,33 +1,47 @@
 #include "game.hpp"
 
 #if __EMSCRIPTEN__
-EM_JS(int, getBrowserWidth, (), {
-    return window.innerWidth;
+EM_JS(int, getWindowWidth, (), {
+    return window.document.querySelector('canvas').clientWidth;
 });
 
-EM_JS(int, getBrowserHeight, (), {
-    return window.innerHeight;
+EM_JS(int, getWindowHeight, (), {
+    return window.document.querySelector('canvas').clientHeight;
 });
 #endif
 
-void Game::Resize() {
-    int height = GetScreenHeight();
-    int width = GetScreenWidth();
+void Game::resize() {
+    #if __EMSCRIPTEN__
+        // add padding to fit other web elements 
+        int width = getWindowWidth() - WINDOW_PAD;
+        int height = getWindowHeight() - WINDOW_PAD;
+    #else
+        int width = GetScreenWidth();
+        int height = GetScreenHeight();
+    #endif
 
     if(screenHeight != height || screenWidth != width){
-        screenHeight = height;
-        screenWidth = width;
-
     #if __EMSCRIPTEN__
-        static int PADDING = 30; // set padding to avoid scrollbar and browser edge overlap
-        SetWindowSize(getBrowserWidth() - PADDING, getBrowserHeight() - PADDING);
+        screenWidth = width; 
+        screenHeight = height;
+        SetWindowSize(screenWidth, screenHeight);
+    #else
+        screenWidth = width;
+        screenHeight = height;
     #endif
     }
+
+    lastResize = std::chrono::steady_clock::now();
+    TraceLog(LOG_INFO, "Window resized %dx%d", screenWidth, screenHeight);
 }
 
-void Game::Update(){
-
-    Resize();
+void Game::update(){
+    if(!IsWindowFullscreen() && IsWindowResized()){
+        auto now = std::chrono::steady_clock::now();
+        if (now - lastResize > RESIZE_COOLDOWN) {
+            resize();
+        }
+    }
 
     if(IsKeyPressed(KEY_SPACE)){
         count++;
@@ -47,7 +61,7 @@ void Game::Update(){
     
 }
 
-void Game::Render() const {
+void Game::render() const {
     BeginDrawing();
         ClearBackground(BLACK);
 
@@ -65,7 +79,7 @@ void Game::Render() const {
     EndDrawing();
 }
 
-void Game::Load(){
+void Game::load(){
     std::string pathAssets = DIR_ASSETS;
     const char* pathSoundSplat = pathAssets.append("/").append(URI_SOUND_SPLAT).c_str();
 
@@ -73,25 +87,26 @@ void Game::Load(){
     count = 0;
 }
 
-void Game::Unload(){
+void Game::unload(){
     UnloadSound(splat);
 }
 
-void Game::Loop(void *self) {
-    Game *client = static_cast<Game *>(self);
+void Game::loop(void* self) {
+    Game* game = static_cast<Game*>(self);
 
-    client->Update();
-    client->Render();
+    game->update();
+    game->render();
 }
 
-void Game::Run() {
+void Game::run() {
     #ifdef __EMSCRIPTEN__
-        // no target FPS for performance
-        emscripten_set_main_loop_arg(Loop, this, 0, 1);
+        resize();
+        // no target FPS (3rd param) for performance
+        emscripten_set_main_loop_arg(loop, this, 0, 1);
     #else
-        SetTargetFPS(60);
+        SetTargetFPS(TARGET_FPS);
         while (!WindowShouldClose()) {
-            Loop(this);
+            loop(this);
         }
     #endif
 }

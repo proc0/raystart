@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 
 #                         PROJECT
 #═══════════════════════════════════════════════════════════════
@@ -223,7 +223,8 @@ if(IS_WEB)
         -sUSE_GLFW=3 
         -sWASM=1
         -sEXPORT_ES6=1
-        -sEXPORTED_RUNTIME_METHODS=ccall,cwrap,HEAPF32 
+        -sEXPORTED_RUNTIME_METHODS=ccall,cwrap,HEAPF32
+        -sEXPORTED_FUNCTIONS=_main,requestFullscreen
         --preload-file "../${DIR_ASSETS}"
         --shell-file "${PATH_WEB_SHELL}"
     )
