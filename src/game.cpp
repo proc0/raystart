@@ -1,40 +1,5 @@
 #include "game.hpp"
 
-#if __EMSCRIPTEN__
-EM_JS(int, getWindowWidth, (), {
-    return window.document.querySelector('canvas').clientWidth;
-});
-
-EM_JS(int, getWindowHeight, (), {
-    return window.document.querySelector('canvas').clientHeight;
-});
-#endif
-
-void Game::resize() {
-    #if __EMSCRIPTEN__
-        // add padding to fit other web elements 
-        int width = getWindowWidth() - WINDOW_PAD;
-        int height = getWindowHeight() - WINDOW_PAD;
-    #else
-        int width = GetScreenWidth();
-        int height = GetScreenHeight();
-    #endif
-
-    if(screenHeight != height || screenWidth != width){
-    #if __EMSCRIPTEN__
-        screenWidth = width; 
-        screenHeight = height;
-        SetWindowSize(screenWidth, screenHeight);
-    #else
-        screenWidth = width;
-        screenHeight = height;
-    #endif
-    }
-
-    lastResize = std::chrono::steady_clock::now();
-    TraceLog(LOG_INFO, "Window resized %dx%d", screenWidth, screenHeight);
-}
-
 void Game::update(){
     if(state == END) return;
 
@@ -45,6 +10,7 @@ void Game::update(){
         }
     }
 
+    // toggle pause menu
     if(IsKeyPressed(KEY_ESCAPE)){
         if(state == PAUSE) {
             state = PLAY;
@@ -62,11 +28,13 @@ void Game::update(){
     // run background stuff and UI to begin
     if(state == OVER || state == PAUSE || state == START || state == WIN) {
         // listen for play button here
+        display.update(world);
         return;
     }
 
     if(state == PLAY){
         world.update();
+        display.update(world);
     }
 
     if(state == BEGIN) {
@@ -91,37 +59,37 @@ void Game::update(){
 void Game::render() const {
     BeginDrawing();
         ClearBackground(BLACK);
+        world.render();
+        display.render();
 
-        DrawRectangleGradientH(0, 0, screenWidth, screenHeight, BLUE, ORANGE);
-        
         if(state == PLAY){
             DrawCircleV(GetMousePosition(), 40, YELLOW);
         }
-
-        world.render(screenWidth, screenHeight);
     EndDrawing();
 }
 
 void Game::load(){
     world.load();
+    display.load();
 }
 
 void Game::unload(){
     world.unload();
+    display.unload();
 }
 
 void Game::loop(void* self) {
     Game* game = static_cast<Game*>(self);
-
+    #ifdef __EMSCRIPTEN__
     if (!game->isRunning()) return;
-
+    #endif
     game->update();
     game->render();
 }
 
 void Game::run() {
+    resize();
     #ifdef __EMSCRIPTEN__
-        resize();
         // no target FPS (3rd param) for performance
         emscripten_set_main_loop_arg(loop, this, 0, 1);
     #else
@@ -134,4 +102,40 @@ void Game::run() {
 
 const bool Game::isRunning() const {
     return state != END;
+}
+
+#if __EMSCRIPTEN__
+EM_JS(int, getWindowWidth, (), {
+    return window.document.querySelector('canvas').clientWidth;
+});
+
+EM_JS(int, getWindowHeight, (), {
+    return window.document.querySelector('canvas').clientHeight;
+});
+#endif
+
+void Game::resize() {
+    #if __EMSCRIPTEN__
+        // add padding to fit other web elements 
+        int width = getWindowWidth() - WINDOW_PAD;
+        int height = getWindowHeight() - WINDOW_PAD;
+    #else
+        int width = GetScreenWidth();
+        int height = GetScreenHeight();
+    #endif
+
+    if(screenHeight != height || screenWidth != width || state == BEGIN){
+        screenWidth = width; 
+        display.screenWidth = width;
+        world.screenWidth = width;
+        screenHeight = height;
+        display.screenHeight = height;
+        world.screenHeight = height;
+    #if __EMSCRIPTEN__
+        SetWindowSize(screenWidth, screenHeight);
+    #endif
+    }
+
+    lastResize = std::chrono::steady_clock::now();
+    TraceLog(LOG_INFO, "Window resized %dx%d", screenWidth, screenHeight);
 }

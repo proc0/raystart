@@ -1,27 +1,25 @@
 #include "world.hpp"
 
+int World::count() {
+    return count_;
+}
+
 void World::load(){
     std::string pathAssets = DIR_ASSETS;
     const char* pathSoundSplat = pathAssets.append("/").append(URI_SOUND_SPLAT).c_str();
 
     splat = LoadSound(pathSoundSplat);
-    count = 0;
+    count_ = 0;
 }
 
-void World::render(int screenWidth, int screenHeight) const {
-    const char* countText = TextFormat("Count: %i", count);
-    DrawText(countText, 50, 50, 20, WHITE);
-    if (IsCursorHidden()) {
-        DrawText("CURSOR HIDDEN", screenWidth/2-100, 60, 20, RED);
-    } else {
-        DrawText("CURSOR VISIBLE", screenWidth/2-100, 60, 20, GREEN);
-    }
+void World::render() const {
+    DrawRectangleGradientH(0, 0, screenWidth, screenHeight, BLUE, ORANGE);
 }
 
 void World::update(){
 
     if(IsKeyPressed(KEY_SPACE)){
-        count++;
+        count_++;
         PlaySound(splat);
     }
     

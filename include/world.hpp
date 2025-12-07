@@ -8,15 +8,19 @@
 #define URI_SOUND_SPLAT "splat1.wav"
 
 class World {
-    int count;
+    int count_;
     Sound splat;
     
     public:
+    int screenWidth;
+    int screenHeight;
+    
     World() {};
     ~World() = default;
     
+    int count();
     void load();
-    void render(int screenWidth, int screenHeight) const;
+    void render() const;
     void update();
     void unload();
 };
