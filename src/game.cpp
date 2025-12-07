@@ -36,6 +36,8 @@ void Game::resize() {
 }
 
 void Game::update(){
+    if(state == END) return;
+
     if(!IsWindowFullscreen() && IsWindowResized()){
         auto now = std::chrono::steady_clock::now();
         if (now - lastResize > RESIZE_COOLDOWN) {
@@ -43,22 +45,47 @@ void Game::update(){
         }
     }
 
-    if(IsKeyPressed(KEY_SPACE)){
-        count++;
-        PlaySound(splat);
-    }
-    
-    if (IsKeyPressed(KEY_H)){
-        if (IsCursorHidden())
-        {
-            ShowCursor();
-        }
-        else
-        {
+    if(IsKeyPressed(KEY_ESCAPE)){
+        if(state == PAUSE) {
+            state = PLAY;
             HideCursor();
+            return;
+        }
+        
+        if(state == PLAY || state == READY) {
+            state = PAUSE;
+            ShowCursor();
+            return;
         }
     }
-    
+
+    // run background stuff and UI to begin
+    if(state == OVER || state == PAUSE || state == START || state == WIN) {
+        // listen for play button here
+        return;
+    }
+
+    if(state == PLAY){
+        world.update();
+    }
+
+    if(state == BEGIN) {
+        // press any key screen (needed to load sound for web, as it needs user input to load audio)
+        if(IsMouseButtonDown(MOUSE_BUTTON_LEFT) || IsMouseButtonDown(MOUSE_BUTTON_RIGHT) || GetKeyPressed() != 0){
+            state = START;
+        }
+    }
+
+    if(state == START){
+        // render some intro
+        state = PLAY;
+        return;
+    }
+
+    if(state == WIN){
+        // render winning screen
+        return;
+    }
 }
 
 void Game::render() const {
@@ -67,32 +94,26 @@ void Game::render() const {
 
         DrawRectangleGradientH(0, 0, screenWidth, screenHeight, BLUE, ORANGE);
         
-        DrawCircleV(GetMousePosition(), 40, YELLOW);
-
-        const char* countText = TextFormat("Count: %i", count);
-        DrawText(countText, 50, 50, 20, WHITE);
-        if (IsCursorHidden()) {
-            DrawText("CURSOR HIDDEN", screenWidth/2-100, 60, 20, RED);
-        } else {
-            DrawText("CURSOR VISIBLE", screenWidth/2-100, 60, 20, GREEN);
+        if(state == PLAY){
+            DrawCircleV(GetMousePosition(), 40, YELLOW);
         }
+
+        world.render(screenWidth, screenHeight);
     EndDrawing();
 }
 
 void Game::load(){
-    std::string pathAssets = DIR_ASSETS;
-    const char* pathSoundSplat = pathAssets.append("/").append(URI_SOUND_SPLAT).c_str();
-
-    splat = LoadSound(pathSoundSplat);
-    count = 0;
+    world.load();
 }
 
 void Game::unload(){
-    UnloadSound(splat);
+    world.unload();
 }
 
 void Game::loop(void* self) {
     Game* game = static_cast<Game*>(self);
+
+    if (!game->isRunning()) return;
 
     game->update();
     game->render();
@@ -105,8 +126,12 @@ void Game::run() {
         emscripten_set_main_loop_arg(loop, this, 0, 1);
     #else
         SetTargetFPS(TARGET_FPS);
-        while (!WindowShouldClose()) {
+        while (!WindowShouldClose() && isRunning()) {
             loop(this);
         }
     #endif
+}
+
+const bool Game::isRunning() const {
+    return state != END;
 }

@@ -11,6 +11,7 @@ int main(void){
 
     InitWindow(game.screenWidth, game.screenHeight, PROJECT_NAME);
     InitAudioDevice();
+    SetExitKey(KEY_NULL);
     
     game.load();
     game.run();
