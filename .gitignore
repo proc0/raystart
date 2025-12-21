@@ -34,3 +34,6 @@ dist-*/*
 *.exe
 *.out
 *.app
+
+# Clangd LSP 
+.cache/*

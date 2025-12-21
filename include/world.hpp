@@ -8,7 +8,7 @@
 #define URI_SOUND_SPLAT "splat1.wav"
 
 class World {
-    int count_;
+    int count_ = 0;
     Sound splat;
     
     public:
