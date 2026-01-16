@@ -224,8 +224,8 @@ if(IS_WEB)
         -sUSE_GLFW=3 
         -sWASM=1
         -sEXPORT_ES6=1
-        -sEXPORTED_RUNTIME_METHODS=ccall,cwrap,HEAPF32
-        -sEXPORTED_FUNCTIONS=_main,requestFullscreen
+        -sEXPORTED_RUNTIME_METHODS=["ccall","cwrap","HEAPF32","requestFullscreen"]
+        -sEXPORTED_FUNCTIONS=_main
         --preload-file "../${DIR_ASSETS}"
         --shell-file "${PATH_WEB_SHELL}"
     )
