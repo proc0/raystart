@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.22)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 #                         PROJECT
 #═══════════════════════════════════════════════════════════════
-set(PROJECT_VERSION "0.1.0")
+set(PROJECT_VERSION "0.2.0")
 get_filename_component(PROJECT_NAME ${CMAKE_CURRENT_LIST_DIR} NAME)
 project(${PROJECT_NAME} VERSION ${PROJECT_VERSION} DESCRIPTION ${PROJECT_NAME} LANGUAGES CXX)
 
@@ -175,6 +175,12 @@ endif()
 
 # Fetch Raylib
 if(USE_RAYLIB_FETCH)
+    # don't build the supplied examples
+    set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE) 
+    set(BUILD_GAMES    OFF CACHE BOOL "" FORCE)
+    set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
+    set(CUSTOMIZE_BUILD OFF CACHE BOOL "" FORCE) 
+
     Fetch(raylib "https://github.com/raysan5/raylib.git" head)
 
     list(APPEND LIBRARIES raylib)
@@ -223,6 +229,8 @@ if(IS_WEB)
         -sFULL_ES3 
         -sUSE_GLFW=3 
         -sWASM=1
+        # 12MB
+        # -sINITIAL_HEAP=100663296
         -sEXPORT_ES6=1
         -sEXPORTED_RUNTIME_METHODS=["ccall","cwrap","HEAPF32","requestFullscreen"]
         -sEXPORTED_FUNCTIONS=_main
