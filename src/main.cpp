@@ -1,21 +1,21 @@
-#include "game.hpp"
+#include "app.hpp"
+
+#include "config.h"
+#include <raylib.h>
 
 int main(void){
-    Game game;
+    App app;
 
-#ifdef __EMSCRIPTEN__
     SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE);
-#else
-    SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE);
-#endif
 
-    InitWindow(game.screenWidth, game.screenHeight, PROJECT_NAME);
+    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, PROJECT_NAME);
     InitAudioDevice();
+    
     SetExitKey(KEY_NULL);
     
-    game.load();
-    game.run();
-    game.unload();
+    app.load();
+    app.start();
+    app.unload();
 
     CloseAudioDevice();
     CloseWindow();
