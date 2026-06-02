@@ -1,5 +1,7 @@
 #pragma once
 
+#include <raylib.h>
+
 namespace Event {
     enum Input {
         IDLE,
@@ -42,3 +44,8 @@ namespace State {
         DROP
     };
 }
+
+typedef struct InputEvent {
+    Event::Input type;
+    Vector2 position;
+} InputEvent;

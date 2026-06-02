@@ -1,5 +1,10 @@
 #include "world.hpp"
 
+#include "config.h"
+#include "defaults.hpp"
+
+#include <string>
+
 int World::count() {
     return count_;
 }
@@ -13,7 +18,7 @@ void World::load(){
 }
 
 void World::render() const {
-    DrawRectangleGradientH(0, 0, screenWidth, screenHeight, BLUE, ORANGE);
+    DrawRectangleGradientH(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, BLUE, ORANGE);
 }
 
 void World::update(){

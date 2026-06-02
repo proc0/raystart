@@ -1,10 +1,22 @@
 #pragma once
 
 #include "types.hpp"
+#include "input.hpp"
+#include "screen.hpp"
 #include "game.hpp"
+#include "world.hpp"
 
 class App {
 	Game game;
+	Input input;
+    Camera2D camera = {
+        .offset = { 0.0f, 0.0f },
+        .target = { 0.0f, 0.0f },
+        .rotation = 0.0f,
+        .zoom = 1.0f
+    };
+	Screen screen = Screen(camera);
+	World world;
 	
 	State::App state = State::App::NIL;
 
