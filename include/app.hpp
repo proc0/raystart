@@ -16,7 +16,7 @@ class App {
         .zoom = 1.0f
     };
 	Screen screen = Screen(camera);
-	World world;
+	World world = World(screen);
 	
 	State::App state = State::App::NIL;
 
@@ -26,8 +26,8 @@ public:
 
     void load();
     void render() const;
-    void run(void* self);
+    static void run(void* self);
     void start();
     void update();
-    void unload();
+    static const char* unload(int eventType, const void *reserved, void *self);
 };

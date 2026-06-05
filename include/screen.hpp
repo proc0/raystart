@@ -24,14 +24,14 @@ class Screen {
     std::chrono::steady_clock::time_point timeLastResize = std::chrono::steady_clock::now();
 	int halfX;
 	int halfY;
-	bool hasResized = false;
+	// bool hasResized = false;
 
 public:
     Vector2 offset = { 0.0f, 0.0f };
 	float unit;
 	float zoomUnit = 0.0f;
     float ratio = 1.0f;
-	int fps;
+	// int fps;
 	int width() const;
 	int height() const;
 	int halfWidth() const;
@@ -40,14 +40,16 @@ public:
 	bool isToggleTracking = false;
 	bool isDoneTracking = false;
 
+	std::vector<ScreenInterface*> listeners;
+
 	Screen(Camera2D& camera):
-	camera(camera),
-	x(SCREEN_WIDTH),
-	y(SCREEN_HEIGHT),
-	halfX(SCREEN_WIDTH/2),
-	halfY(SCREEN_HEIGHT/2),
-	unit(SCREEN_UNIT),
-	fps(TARGET_FPS) {};
+		camera(camera),
+		x(SCREEN_WIDTH),
+		y(SCREEN_HEIGHT),
+		halfX(SCREEN_WIDTH/2),
+		halfY(SCREEN_HEIGHT/2),
+		unit(SCREEN_UNIT) {};
+	// fps(TARGET_FPS) {};
 	~Screen() = default;
 
 	void load();
@@ -58,7 +60,8 @@ public:
 	// Vector2 project(b2Vec2 point) const;
 	// Rectangle project(Rectangle area) const;
 	// b2Vec2 inject(Vector2 point) const;
-	void resize();
+	void addListener(ScreenInterface* listener);
+	void resize(int newWidth, int newHeight);
 	float scale(float value) const;
 	Rectangle scale(Rectangle area) const;
 	Vector2 scale(Vector2 vect) const;
@@ -68,6 +71,6 @@ public:
 	void track(InputEvent);
 	bool tracking() const;
 	bool doneTracking();
-	bool update(InputEvent);
+	void update(InputEvent);
 	void zoom(bool increase);
 };

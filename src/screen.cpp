@@ -8,9 +8,12 @@
 
 void Screen::load() {
     // must initialize the screen size
-    resize();
+    resize(SCREEN_WIDTH, SCREEN_HEIGHT);
 }
 
+void Screen::addListener(ScreenInterface* listener) {
+    listeners.push_back(listener);
+}
 // float Screen::adapt(float value) const {
 //     return value * unit;
 // }
@@ -74,13 +77,33 @@ Rectangle Screen::center(Rectangle area, Vector2 offset) const {
 //     };
 // }
 
-bool Screen::update(InputEvent input) {
-    fps = GetFPS();
+#if __EMSCRIPTEN__
+EM_JS(int, getWindowWidth, (), {
+    return window.document.querySelector('canvas').clientWidth;
+});
 
-    if(IsWindowResized()){
+EM_JS(int, getWindowHeight, (), {
+    return window.document.querySelector('canvas').clientHeight;
+});
+#endif
+
+void Screen::update(InputEvent input) {
+    // fps = GetFPS();
+    #if __EMSCRIPTEN__
+        int newWidth = getWindowWidth();
+        int newHeight = getWindowHeight();
+    #else
+        int newWidth = GetScreenWidth();
+        int newHeight = GetScreenHeight();
+    #endif
+
+    if(newWidth != x || newHeight != y){
         auto timeResize = std::chrono::steady_clock::now();
         if (timeResize - timeLastResize > timeResizeRate) {
-            resize();
+            resize(newWidth, newHeight);
+            for (auto* listener : listeners) {
+                listener->onScreenResize(newWidth, newHeight);
+            }
         }
     }
 
@@ -106,33 +129,15 @@ bool Screen::update(InputEvent input) {
     // unified flag processing for both internal 
     // method calling and external method calling
     // resize functions
-    if (hasResized) {
-        // reset flag
-        hasResized = false;
-        return true;
-    }
-
-    return false;
+    // if (hasResized) {
+    //     // reset flag
+    //     hasResized = false;
+    //     return true;
+    // }
 }
 
-#if __EMSCRIPTEN__
-EM_JS(int, getWindowWidth, (), {
-    return window.document.querySelector('canvas').clientWidth;
-});
 
-EM_JS(int, getWindowHeight, (), {
-    return window.document.querySelector('canvas').clientHeight;
-});
-#endif
-
-void Screen::resize() {
-    #if __EMSCRIPTEN__
-        int newWidth = getWindowWidth();
-        int newHeight = getWindowHeight();
-    #else
-        int newWidth = GetScreenWidth();
-        int newHeight = GetScreenHeight();
-    #endif
+void Screen::resize(int newWidth, int newHeight) {
 
     // calculate ratio based on screen diagonal
     ratio = ROUND4(sqrtf(powf(newWidth, 2.0f) + powf(newHeight, 2.0f))/unitRatio);
@@ -143,7 +148,7 @@ void Screen::resize() {
     unit = SCREEN_UNIT*ratio + zoomUnit*ratio;
     timeLastResize = std::chrono::steady_clock::now();
 
-    hasResized = true;
+    // hasResized = true;
     TraceLog(LOG_INFO, "SCREEN resized %ix%i - UNIT: %f", newWidth, newHeight, unit);
 }
 
@@ -217,7 +222,7 @@ void Screen::zoom(bool increase) {
         unit -= amount*ratio;
         zoomUnit -= amount;
     }
-    hasResized = true;
+    // hasResized = true;
 }
 
 int Screen::width() const {

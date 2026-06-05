@@ -18,7 +18,7 @@ void World::load(){
 }
 
 void World::render() const {
-    DrawRectangleGradientH(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, BLUE, ORANGE);
+    DrawRectangleGradientH(0, 0, screen.width(), screen.height(), BLUE, ORANGE);
 }
 
 void World::update(){
@@ -39,4 +39,8 @@ void World::update(){
 
 void World::unload(){
     UnloadSound(splat);
+}
+
+void World::onScreenResize(int width, int height) {
+    TraceLog(LOG_INFO, "HELLO FROM WORLD RESIZE %i %i", width, height);
 }

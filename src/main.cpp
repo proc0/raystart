@@ -1,24 +1,19 @@
 #include "app.hpp"
 
-#include "config.h"
+// #include "config.h"
 #include <raylib.h>
 
 int main(void){
-    App app;
-
-    SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE);
-
-    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, PROJECT_NAME);
-    InitAudioDevice();
+    App* app = new App();
     
-    SetExitKey(KEY_NULL);
-    
-    app.load();
-    app.start();
-    app.unload();
+    app->load();
+    app->start();
+#ifndef __EMSCRIPTEN__
+    app->unload(0, (const void*)nullptr, app);
+#endif
 
-    CloseAudioDevice();
-    CloseWindow();
+    // CloseAudioDevice();
+    // CloseWindow();
 
     return 0;
 }

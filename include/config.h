@@ -3,7 +3,7 @@
 #define PROJECT_NAME "raystart"
 #define VERSION "0.2.0"
 #define DEBUG 1
-#define DATE_BUILD "2026-06-01 21:41:18"
+#define DATE_BUILD "2026-06-05 00:30:30"
 #define DIR_ASSETS "assets"
 
 #define PATH_ASSET(filename) DIR_ASSETS "/" filename

@@ -229,6 +229,7 @@ if(IS_WEB)
         -sFULL_ES3 
         -sUSE_GLFW=3 
         -sWASM=1
+        # -sASYNCIFY=1
         # 12MB
         # -sINITIAL_HEAP=100663296
         -sEXPORT_ES6=1
@@ -240,6 +241,7 @@ if(IS_WEB)
 
     if(IS_DEBUG)
         target_link_options(${PROJECT_NAME} PRIVATE 
+            # wasm-exceptinos not cmpatible with ASYNCIFY
             -fwasm-exceptions
             -sABORT_ON_WASM_EXCEPTIONS
             --emrun

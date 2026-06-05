@@ -1,13 +1,17 @@
 #pragma once
 
+#include "screen.hpp"
+#include "types.hpp"
+
 #include <raylib.h>
 
-class World {
+class World : public ScreenInterface {
     int count_ = 0;
     Sound splat;
-    
+    const Screen& screen;
+
 public:
-    World() {};
+    World(const Screen& screen): screen(screen) {};
     ~World() = default;
     
     int count();
@@ -15,4 +19,5 @@ public:
     void render() const;
     void update();
     void unload();
+    void onScreenResize(int width, int height);
 };

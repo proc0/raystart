@@ -49,3 +49,9 @@ typedef struct InputEvent {
     Event::Input type;
     Vector2 position;
 } InputEvent;
+
+class ScreenInterface {
+public:
+    virtual ~ScreenInterface() = default;
+    virtual void onScreenResize(int width, int height) = 0;
+};
