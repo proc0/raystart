@@ -46,12 +46,12 @@ namespace State {
 }
 
 typedef struct InputEvent {
-    Event::Input type;
+    Event::Input id;
     Vector2 position;
 } InputEvent;
 
-class ScreenInterface {
+class ScreenListener {
 public:
-    virtual ~ScreenInterface() = default;
+    virtual ~ScreenListener() = default;
     virtual void onScreenResize(int width, int height) = 0;
 };

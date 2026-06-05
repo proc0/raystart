@@ -3,17 +3,26 @@
 #include "defaults.hpp"
 #include "types.hpp"
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
 #include <raylib.h>
 #include <raymath.h>
 
+
+
 void Screen::load() {
-    // must initialize the screen size
-    resize(SCREEN_WIDTH, SCREEN_HEIGHT);
+    // initialize the screen size for Web
+    update({ 
+        .id = Event::Input::IDLE,
+        .position = { 0.0f, 0.0f }
+    });
 }
 
-void Screen::addListener(ScreenInterface* listener) {
+void Screen::listen(ScreenListener* listener) {
     listeners.push_back(listener);
 }
+
 // float Screen::adapt(float value) const {
 //     return value * unit;
 // }
@@ -118,27 +127,17 @@ void Screen::update(InputEvent input) {
         isTracking = true;
     }
 
-    if (isToggleTracking && input.type == Event::Input::PRIMARY) {
+    if (isToggleTracking && input.id == Event::Input::PRIMARY) {
         isTracking = true;
     }
 
     if (isTracking) {
         track(input);
     }
-
-    // unified flag processing for both internal 
-    // method calling and external method calling
-    // resize functions
-    // if (hasResized) {
-    //     // reset flag
-    //     hasResized = false;
-    //     return true;
-    // }
 }
 
 
 void Screen::resize(int newWidth, int newHeight) {
-
     // calculate ratio based on screen diagonal
     ratio = ROUND4(sqrtf(powf(newWidth, 2.0f) + powf(newHeight, 2.0f))/unitRatio);
     x = newWidth;
@@ -148,7 +147,6 @@ void Screen::resize(int newWidth, int newHeight) {
     unit = SCREEN_UNIT*ratio + zoomUnit*ratio;
     timeLastResize = std::chrono::steady_clock::now();
 
-    // hasResized = true;
     TraceLog(LOG_INFO, "SCREEN resized %ix%i - UNIT: %f", newWidth, newHeight, unit);
 }
 
@@ -180,9 +178,9 @@ void Screen::toggleTrack() {
 
 void Screen::track(InputEvent input) {
     // TODO: move middle mouse button to Input, refactor
-    bool beginTrack = isToggleTracking ? input.type == Event::Input::PRIMARY : IsMouseButtonPressed(MOUSE_BUTTON_MIDDLE);
-    bool continueTrack = isToggleTracking ? input.type == Event::Input::PRIMARY_DOWN : IsMouseButtonDown(MOUSE_BUTTON_MIDDLE);
-    bool endTrack = isToggleTracking ? input.type == Event::Input::PRIMARY_UP : IsMouseButtonReleased(MOUSE_BUTTON_MIDDLE);
+    bool beginTrack = isToggleTracking ? input.id == Event::Input::PRIMARY : IsMouseButtonPressed(MOUSE_BUTTON_MIDDLE);
+    bool continueTrack = isToggleTracking ? input.id == Event::Input::PRIMARY_DOWN : IsMouseButtonDown(MOUSE_BUTTON_MIDDLE);
+    bool endTrack = isToggleTracking ? input.id == Event::Input::PRIMARY_UP : IsMouseButtonReleased(MOUSE_BUTTON_MIDDLE);
 
     if (beginTrack) {
         Vector2 origin = { static_cast<float>(halfX) + camera.offset.x, static_cast<float>(halfY) + camera.offset.y };
@@ -222,7 +220,6 @@ void Screen::zoom(bool increase) {
         unit -= amount*ratio;
         zoomUnit -= amount;
     }
-    // hasResized = true;
 }
 
 int Screen::width() const {

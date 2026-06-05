@@ -21,7 +21,7 @@ void App::load() {
 	game.load();
 	world.load();
 
-    screen.addListener(&world);
+    screen.listen(&world);
 }
 
 void App::render() const {
@@ -34,16 +34,8 @@ void App::render() const {
 void App::run(void* self) {
     App* app = static_cast<App*>(self);
 
-#ifdef __EMSCRIPTEN__
-    if (app->state == State::App::END) return;
-#endif
-
     app->update();
     app->render();
-
-// #if DEBUG
-//     app->debugRender();
-// #endif
 }
 
 void App::start() {
@@ -58,8 +50,9 @@ void App::start() {
 	state = State::App::RUN;
 	
 #ifdef __EMSCRIPTEN__
-    // no target FPS (3rd param) for web performance
-    emscripten_set_main_loop_arg(run, this, 0, 1);
+    // no target FPS (3rd param) to allow browser to optimize frame rate
+    // set simulate infinite loop (4th param) to 0 to let the rest of the function execute (on Web)
+    emscripten_set_main_loop_arg(run, this, 0, 0);
     emscripten_set_beforeunload_callback(this, unload);
 #else
     SetTargetFPS(TARGET_FPS);
@@ -72,18 +65,7 @@ void App::start() {
 void App::update() {
     InputEvent inputEvent = input.update();
 
-    // window resizing
     screen.update(inputEvent);
-    // if (resized) {
-    //     // world.resize();
-    //     // menu->resize();
-    //     // display.resize();
-    //     // game->resize();
-
-    //     // if(state == State::App::PAUSE || state == State::App::START) {
-    //     //     world.update(game->status(), control.status(), display.status());
-    //     // }
-    // }
 
 	game.update();
 	world.update();

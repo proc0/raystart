@@ -9,10 +9,6 @@
 #include <raylib.h>
 #include <chrono>
 
-#ifdef __EMSCRIPTEN__
-#include <emscripten.h>
-#endif
-
 class Screen {
 	Camera2D& camera;
     Vector2 originDelta = { 0.0f, 0.0f };
@@ -24,7 +20,6 @@ class Screen {
     std::chrono::steady_clock::time_point timeLastResize = std::chrono::steady_clock::now();
 	int halfX;
 	int halfY;
-	// bool hasResized = false;
 
 public:
     Vector2 offset = { 0.0f, 0.0f };
@@ -40,7 +35,7 @@ public:
 	bool isToggleTracking = false;
 	bool isDoneTracking = false;
 
-	std::vector<ScreenInterface*> listeners;
+	std::vector<ScreenListener*> listeners;
 
 	Screen(Camera2D& camera):
 		camera(camera),
@@ -60,7 +55,7 @@ public:
 	// Vector2 project(b2Vec2 point) const;
 	// Rectangle project(Rectangle area) const;
 	// b2Vec2 inject(Vector2 point) const;
-	void addListener(ScreenInterface* listener);
+	void listen(ScreenListener* listener);
 	void resize(int newWidth, int newHeight);
 	float scale(float value) const;
 	Rectangle scale(Rectangle area) const;
