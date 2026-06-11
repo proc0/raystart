@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <raylib.h>
 
 namespace Event {
@@ -19,6 +20,12 @@ namespace Event {
         SWIPE_LEFT,
         KEY_ESCAPE,
         KEY_OTHER
+    };
+
+    enum Timer {
+        READY,
+        RUNNING,
+        FINISHED
     };
 }
 
@@ -49,6 +56,11 @@ typedef struct InputEvent {
     Event::Input id;
     Vector2 position;
 } InputEvent;
+
+// typedef struct TimerEvent {
+//     uint16_t id;
+//     Event::Timer state;
+// } TimerEvent;
 
 class ScreenListener {
 public:

@@ -12,3 +12,5 @@
 #define SCREEN_RESIZE_RATE 300
 
 #define UNIT_RATIO (sqrtf(powf(static_cast<float>(SCREEN_WIDTH), 2.0f) + powf(static_cast<float>(SCREEN_HEIGHT), 2.0f)))
+
+#define INTRO_TIME_MS 2000
